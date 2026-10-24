@@ -1,0 +1,276 @@
+<Window x:Class="LaundryzkyWPF.Views.KasirWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Laundryzky - Kasir POS" Height="780" Width="1240"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8FAFC">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar Kasir -->
+        <Border Grid.Column="0" Background="{StaticResource PrimaryBlueBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Brand -->
+                <StackPanel Grid.Row="0" Margin="20,25,20,25">
+                    <TextBlock Text="🧺 Laundryzky" FontSize="22" FontWeight="Bold" Foreground="White"/>
+                    <Border Background="#2563EB" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Margin="0,6,0,0">
+                        <TextBlock Text="KASIR POS" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Sidebar Menus -->
+                <StackPanel Grid.Row="1">
+                    <Button x:Name="btnMenuKasirPOS" Content="🛒 Kasir POS (Order)" Style="{StaticResource SidebarButton}" Click="BtnMenuKasirPOS_Click"/>
+                    <Button x:Name="btnMenuDaftarTransaksi" Content="🧾 Riwayat Transaksi" Style="{StaticResource SidebarButton}" Click="BtnMenuDaftarTransaksi_Click"/>
+                    <Button x:Name="btnMenuPelanggan" Content="👥 Data Pelanggan" Style="{StaticResource SidebarButton}" Click="BtnMenuPelanggan_Click"/>
+                </StackPanel>
+
+                <!-- User profile & Logout -->
+                <StackPanel Grid.Row="2" Margin="15,20">
+                    <Border Background="#0F3796" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock x:Name="lblNamaKasir" Text="Nama Kasir" FontWeight="Bold" Foreground="White" FontSize="14"/>
+                            <TextBlock Text="Petugas Kasir" Foreground="#BFDBFE" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+                    <Button Content="🚪 Logout" Style="{StaticResource SecondaryButton}" Click="BtnLogout_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Body -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Header -->
+            <Border Grid.Row="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="25,0">
+                <Grid VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock x:Name="lblHeaderTitle" Text="Kasir Point of Sales" FontSize="20" FontWeight="Bold" Foreground="{StaticResource DarkTextBrush}"/>
+                        <TextBlock Text="Input transaksi laundry baru, kelola pelanggan, dan pembayaran" FontSize="12" Foreground="{StaticResource MutedTextBrush}"/>
+                    </StackPanel>
+                    <TextBlock x:Name="lblTanggal" Text="Senin, 01 Januari 2026" HorizontalAlignment="Right" VerticalAlignment="Center" 
+                               FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- POS Panel Content -->
+            <Grid x:Name="panelPOS" Grid.Row="1" Margin="25">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Input Order Card -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorder}" Padding="20" Margin="0,0,15,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="Form Input Order Laundry" FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}" Margin="0,0,0,15"/>
+
+                            <!-- Pelanggan -->
+                            <TextBlock Text="Pilih Pelanggan" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="cmbPelanggan" Grid.Column="0" Height="38" DisplayMemberPath="NamaPelanggan" SelectedValuePath="IdPelanggan" SelectionChanged="CmbPelanggan_SelectionChanged"/>
+                                <Button Grid.Column="1" Content="+ Pelanggan Baru" Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Click="BtnTambahPelangganBaru_Click"/>
+                            </Grid>
+
+                            <!-- Layanan -->
+                            <TextBlock Text="Jenis Layanan" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <ComboBox x:Name="cmbLayanan" Height="38" DisplayMemberPath="NamaLayanan" SelectedValuePath="IdLayanan" SelectionChanged="CmbLayanan_SelectionChanged" Margin="0,0,0,15"/>
+
+                            <!-- Berat & Estimasi -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="Berat (Kg) - Maks. 50 Kg" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                    <TextBox x:Name="txtBerat" Style="{StaticResource ModernTextBox}" Text="1" 
+                                             PreviewTextInput="NumberOnly_PreviewTextInput" 
+                                             TextChanged="TxtBerat_TextChanged"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <TextBlock Text="Estimasi Selesai" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                    <DatePicker x:Name="dpEstimasi" Height="38"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Catatan Barang / Saku Awal -->
+                            <TextBlock Text="Catatan Bawaan / Cek Awal Kasir" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtCatatanKasir" Style="{StaticResource ModernTextBox}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,15"/>
+
+                            <!-- Metode Pembayaran -->
+                            <TextBlock Text="Opsi Pembayaran" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <RadioButton x:Name="rbBayarSekarang" Content="Bayar Sekarang (Lunas)" IsChecked="True" Margin="0,0,20,0" VerticalAlignment="Center"/>
+                                <RadioButton x:Name="rbBayarNanti" Content="Bayar Saat Ambil" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Nominal Bayar -->
+                            <TextBlock Text="Jumlah Uang Diterima (Rp)" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtUangBayar" Style="{StaticResource ModernTextBox}" Text="0" 
+                                     PreviewTextInput="DigitsOnly_PreviewTextInput" 
+                                     TextChanged="TxtUangBayar_TextChanged" Margin="0,0,0,20"/>
+
+                            <!-- Action Buttons -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="Reset Form" Margin="0,0,8,0" Style="{StaticResource SecondaryButton}" Click="BtnReset_Click"/>
+                                <Button Grid.Column="1" Content="💾 Simpan Transaksi" Margin="8,0,0,0" Style="{StaticResource PrimaryButton}" Click="BtnSimpanTransaksi_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Live Struk / Summary Card -->
+                <Border Grid.Column="1" Style="{StaticResource CardBorder}" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header Struk -->
+                        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,15">
+                            <TextBlock Text="STRUK TRANSAKSI" FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Laundryzky Bersih &amp; Terpercaya" FontSize="11" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                            <Rectangle Height="1" Fill="#CBD5E1" Margin="0,10,0,0"/>
+                        </StackPanel>
+
+                        <!-- Body Struk -->
+                        <StackPanel Grid.Row="1" Margin="0,10">
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Pelanggan:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblStrukPelanggan" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Layanan:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblStrukLayanan" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Tarif per Kg:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblStrukTarif" Text="Rp 0" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Berat Cucian:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblStrukBerat" Text="0 Kg" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Rectangle Height="1" Fill="#E2E8F0" Margin="0,10"/>
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Total Tagihan:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource DarkTextBrush}"/>
+                                <TextBlock x:Name="lblStrukTotal" Text="Rp 0" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Bayar (Tunai/QRIS):" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblStrukBayar" Text="Rp 0" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Kembalian:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblStrukKembali" Text="Rp 0" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Footer Struk -->
+                        <Border Grid.Row="2" Background="{StaticResource LightBlueBrush}" CornerRadius="8" Padding="12">
+                            <TextBlock Text="Cucian akan langsung masuk antrean untuk diproses oleh bagian pencucian dan setrika." FontSize="11" Foreground="{StaticResource PrimaryBlueBrush}" TextWrapping="Wrap" TextAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Riwayat Transaksi Panel -->
+            <Grid x:Name="panelDaftarTransaksi" Grid.Row="1" Margin="25" Visibility="Collapsed">
+                <Border Style="{StaticResource CardBorder}" Padding="15">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,15">
+                            <TextBlock Text="Semua Riwayat Transaksi Laundry" FontSize="16" FontWeight="Bold" Foreground="{StaticResource DarkTextBrush}" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <TextBox x:Name="txtCariTrx" Width="220" Height="34" Margin="0,0,10,0" Style="{StaticResource ModernTextBox}"
+                                         Tag="Cari kode TRX / pelanggan..." TextChanged="TxtCariTrx_TextChanged"/>
+                                <Button Content="🔄 Segarkan" Width="95" Height="34" Style="{StaticResource SecondaryButton}" Click="BtnRefreshTrx_Click"/>
+                            </StackPanel>
+                        </Grid>
+                        <DataGrid x:Name="dgvRiwayatTrx" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  BorderThickness="0" Background="White" RowHeight="38">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Kode TRX" Binding="{Binding KodeTransaksi}" Width="100"/>
+                                <DataGridTextColumn Header="Pelanggan" Binding="{Binding NamaPelanggan}" Width="140"/>
+                                <DataGridTextColumn Header="Tanggal" Binding="{Binding TanggalMasuk, StringFormat={}{0:dd-MM-yyyy}}" Width="100"/>
+                                <DataGridTextColumn Header="Total" Binding="{Binding TotalFormatted}" Width="110"/>
+                                <DataGridTextColumn Header="Status Pengerjaan" Binding="{Binding StatusDisplay}" Width="120"/>
+                                <DataGridTextColumn Header="Pembayaran" Binding="{Binding StatusPembayaranDisplay}" Width="110"/>
+                                <DataGridTextColumn Header="Status Cuci" Binding="{Binding StatusCuciDisplay}" Width="100"/>
+                                <DataGridTextColumn Header="Status Setrika" Binding="{Binding StatusSetrikaDisplay}" Width="100"/>
+                                <DataGridTextColumn Header="Catatan Saku" Binding="{Binding CatatanSaku}" Width="*"/>
+                                <DataGridTemplateColumn Header="Aksi" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="📄 Cetak Nota" Height="28" Width="110" HorizontalAlignment="Left" Padding="8,2" FontSize="12" Style="{StaticResource PrimaryButton}" Click="BtnCetakNotaRiwayat_Click"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Pelanggan Panel -->
+            <Grid x:Name="panelPelanggan" Grid.Row="1" Margin="25" Visibility="Collapsed">
+                <Border Style="{StaticResource CardBorder}" Padding="15">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,15">
+                            <TextBlock Text="Data Pelanggan Laundry" FontSize="16" FontWeight="Bold" Foreground="{StaticResource DarkTextBrush}" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <TextBox x:Name="txtCariPelanggan" Width="220" Height="34" Margin="0,0,10,0" Style="{StaticResource ModernTextBox}"
+                                         Tag="Cari nama / HP pelanggan..." TextChanged="TxtCariPelanggan_TextChanged"/>
+                                <Button Content="+ Tambah Pelanggan" Width="150" Height="34" Style="{StaticResource PrimaryButton}" Click="BtnTambahPelangganBaru_Click"/>
+                            </StackPanel>
+                        </Grid>
+                        <DataGrid x:Name="dgvPelanggan" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  BorderThickness="0" Background="White" RowHeight="38">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding IdPelanggan}" Width="60"/>
+                                <DataGridTextColumn Header="Nama Pelanggan" Binding="{Binding NamaPelanggan}" Width="200"/>
+                                <DataGridTextColumn Header="No. HP / WA" Binding="{Binding NoHp}" Width="150"/>
+                                <DataGridTextColumn Header="Alamat" Binding="{Binding Alamat}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

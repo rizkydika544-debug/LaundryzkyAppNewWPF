@@ -1,0 +1,47 @@
+<Window x:Class="LaundryzkyWPF.Views.TambahUserWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kelola Karyawan" Height="560" MaxHeight="650" Width="460"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8FAFC">
+    <Grid Margin="15">
+        <Border Style="{StaticResource CardBorder}" Padding="15">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="5">
+                    <TextBlock x:Name="lblJudul" Text="Tambah Karyawan / User" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Nama Lengkap" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtNamaUser" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Username" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtUsername" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Password" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtPassword" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Pilih Role / Bagian Kerja" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="cmbRole" Height="38" Margin="0,0,0,12">
+                        <ComboBoxItem Content="kasir" IsSelected="True"/>
+                        <ComboBoxItem Content="cuci"/>
+                        <ComboBoxItem Content="setrika"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Status Akun" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="cmbStatus" Height="38" Margin="0,0,0,20">
+                        <ComboBoxItem Content="aktif" IsSelected="True"/>
+                        <ComboBoxItem Content="nonaktif"/>
+                    </ComboBox>
+
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Batal" Height="40" Margin="0,0,6,0" Style="{StaticResource SecondaryButton}" Click="BtnBatal_Click"/>
+                        <Button Grid.Column="1" Content="Simpan" Height="40" Margin="6,0,0,0" Style="{StaticResource PrimaryButton}" Click="BtnSimpan_Click"/>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>
