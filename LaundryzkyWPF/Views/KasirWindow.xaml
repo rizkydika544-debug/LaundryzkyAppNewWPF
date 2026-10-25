@@ -117,18 +117,64 @@
                             <TextBlock Text="Catatan Bawaan / Cek Awal Kasir" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <TextBox x:Name="txtCatatanKasir" Style="{StaticResource ModernTextBox}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,15"/>
 
-                            <!-- Metode Pembayaran -->
-                            <TextBlock Text="Opsi Pembayaran" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <!-- Opsi Waktu Pembayaran -->
+                            <TextBlock Text="Waktu Pembayaran" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                <RadioButton x:Name="rbBayarSekarang" Content="Bayar Sekarang (Lunas)" IsChecked="True" Margin="0,0,20,0" VerticalAlignment="Center"/>
-                                <RadioButton x:Name="rbBayarNanti" Content="Bayar Saat Ambil" VerticalAlignment="Center"/>
+                                <RadioButton x:Name="rbBayarSekarang" Content="Bayar Sekarang (Lunas)" IsChecked="True" Margin="0,0,20,0" VerticalAlignment="Center" Checked="RbOpsiBayar_Changed"/>
+                                <RadioButton x:Name="rbBayarNanti" Content="Bayar Saat Ambil" VerticalAlignment="Center" Checked="RbOpsiBayar_Changed"/>
                             </StackPanel>
 
+                            <!-- Metode Pembayaran (Cash / QRIS) -->
+                            <StackPanel x:Name="panelMetodeBayar" Margin="0,0,0,15">
+                                <TextBlock Text="Metode Pembayaran" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="rbMetodeTunai" Content="💵 Tunai (Cash)" IsChecked="True" Margin="0,0,20,0" VerticalAlignment="Center" Checked="RbMetodeBayar_Changed"/>
+                                    <RadioButton x:Name="rbMetodeQris" Content="📱 QRIS (All Payment)" VerticalAlignment="Center" Checked="RbMetodeBayar_Changed"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Info QRIS Box (Tampil saat pilih QRIS) -->
+                            <Border x:Name="borderQrisInfo" Background="#F0FDF4" BorderBrush="#22C55E" BorderThickness="1.5" CornerRadius="8" Padding="12" Margin="0,0,0,15" Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Gambar QRIS Asli yang Bisa Di-Scan Smartphone (Bisa diklik untuk memperbesar) -->
+                                    <Border Grid.Column="0" Background="White" BorderBrush="#22C55E" BorderThickness="2" CornerRadius="8" Padding="4" Margin="0,0,12,0" 
+                                            HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" MouseLeftButtonDown="QrisImage_Click"
+                                            ToolTip="Klik gambar ini untuk memperbesar QRIS agar mudah di-scan!">
+                                        <Grid>
+                                            <Image Source="/Assets/qris_laundry.png" Width="135" Height="190" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            <Border Background="#CC000000" CornerRadius="4" VerticalAlignment="Bottom" Padding="4,2" Margin="2">
+                                                <TextBlock Text="🔍 Klik Perbesar" FontSize="9.5" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                    
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <Border Background="#DCFCE7" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Margin="0,0,0,6">
+                                            <TextBlock Text="● QRIS SIMULASI AKTIF (BISA DI-SCAN)" FontWeight="Bold" FontSize="10" Foreground="#15803D"/>
+                                        </Border>
+                                        <TextBlock Text="RIZKY DIKA SYAHREZA, LAUNDRY" FontWeight="Bold" FontSize="13" Foreground="#0F172A"/>
+                                        <TextBlock Text="NMID: ID1026607199175" FontSize="10" Foreground="#64748B" Margin="0,1,0,6"/>
+                                        <TextBlock Text="Kamera HP / E-Wallet (GoPay, OVO, DANA, BCA, Mandiri, BRI, dll) dapat langsung scan barcode." FontSize="11" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                        <TextBlock Text="👉 Klik pada gambar QRIS untuk memperbesar layar penuh!" FontSize="10.5" FontWeight="SemiBold" Foreground="#16A34A" Margin="0,0,0,6"/>
+                                        <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,2,0,0">
+                                            <TextBlock Text="💡 Tagihan di aplikasi Laundryzky otomatis tercatat LUNAS tanpa perlu uang tunai." FontSize="10.5" Foreground="#92400E" TextWrapping="Wrap"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
                             <!-- Nominal Bayar -->
-                            <TextBlock Text="Jumlah Uang Diterima (Rp)" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                            <TextBox x:Name="txtUangBayar" Style="{StaticResource ModernTextBox}" Text="0" 
-                                     PreviewTextInput="DigitsOnly_PreviewTextInput" 
-                                     TextChanged="TxtUangBayar_TextChanged" Margin="0,0,0,20"/>
+                            <StackPanel x:Name="panelInputBayar">
+                                <TextBlock Text="Jumlah Uang Diterima (Rp)" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                <TextBox x:Name="txtUangBayar" Style="{StaticResource ModernTextBox}" Text="0" 
+                                         PreviewTextInput="DigitsOnly_PreviewTextInput" 
+                                         TextChanged="TxtUangBayar_TextChanged" Margin="0,0,0,20"/>
+                            </StackPanel>
 
                             <!-- Action Buttons -->
                             <Grid>
@@ -183,6 +229,10 @@
                                 <TextBlock x:Name="lblStrukTotal" Text="Rp 0" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}" HorizontalAlignment="Right"/>
                             </Grid>
                             <Grid Margin="0,4">
+                                <TextBlock Text="Metode Pembayaran:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblStrukMetode" Text="Tunai (Cash)" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,4">
                                 <TextBlock Text="Bayar (Tunai/QRIS):" Foreground="{StaticResource MutedTextBrush}"/>
                                 <TextBlock x:Name="lblStrukBayar" Text="Rp 0" FontWeight="Bold" HorizontalAlignment="Right"/>
                             </Grid>
@@ -229,10 +279,17 @@
                                 <DataGridTextColumn Header="Status Cuci" Binding="{Binding StatusCuciDisplay}" Width="100"/>
                                 <DataGridTextColumn Header="Status Setrika" Binding="{Binding StatusSetrikaDisplay}" Width="100"/>
                                 <DataGridTextColumn Header="Catatan Saku" Binding="{Binding CatatanSaku}" Width="*"/>
-                                <DataGridTemplateColumn Header="Aksi" Width="140">
+                                <DataGridTemplateColumn Header="Aksi" Width="240">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="📄 Cetak Nota" Height="28" Width="110" HorizontalAlignment="Left" Padding="8,2" FontSize="12" Style="{StaticResource PrimaryButton}" Click="BtnCetakNotaRiwayat_Click"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <!-- Tombol Bayar / Ambil Cucian -->
+                                                <Button Content="💳 Bayar / Ambil" Height="28" Width="105" Margin="0,0,6,0" Padding="6,2" FontSize="11" FontWeight="SemiBold" 
+                                                        Style="{StaticResource SuccessButton}" Click="BtnBayarAmbilRiwayat_Click"/>
+                                                <!-- Tombol Cetak Nota -->
+                                                <Button Content="📄 Nota" Height="28" Width="65" Padding="6,2" FontSize="11" 
+                                                        Style="{StaticResource PrimaryButton}" Click="BtnCetakNotaRiwayat_Click"/>
+                                            </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -271,6 +328,138 @@
                     </Grid>
                 </Border>
             </Grid>
+        </Grid>
+
+        <!-- Modal Overlay Pop-up QRIS Membesar (Di Tengah Layar Penuh) -->
+        <Grid x:Name="modalQrisZoom" Grid.ColumnSpan="2" Grid.RowSpan="2" Background="#D90F172A" Visibility="Collapsed">
+            <Border Background="White" CornerRadius="16" Padding="25" MaxWidth="520" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    BorderBrush="#3B82F6" BorderThickness="2">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.5" Color="Black"/>
+                </Border.Effect>
+                <StackPanel HorizontalAlignment="Center">
+                    <!-- Header Pop-up -->
+                    <Grid Width="460" Margin="0,0,0,15">
+                        <StackPanel>
+                            <TextBlock Text="SCAN QRIS PEMBAYARAN" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}"/>
+                            <TextBlock Text="Arahkan kamera smartphone atau aplikasi e-wallet Anda ke barcode di bawah:" FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
+                        </StackPanel>
+                        <Button Content="✕" Width="32" Height="32" FontWeight="Bold" FontSize="16" Style="{StaticResource SecondaryButton}" 
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtnTutupModalQris_Click"
+                                ToolTip="Tutup Tampilan QRIS"/>
+                    </Grid>
+
+                    <!-- Gambar QRIS Besar & Jelas -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1.5" CornerRadius="12" Padding="12" HorizontalAlignment="Center">
+                        <Image Source="/Assets/qris_laundry.png" Width="360" Height="500" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    </Border>
+
+                    <!-- Footer Pop-up -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
+                        <Button Content="Tutup QRIS (Selesai Scan)" Width="200" Height="40" Style="{StaticResource PrimaryButton}" Click="BtnTutupModalQris_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Modal Overlay Pelunasan & Pengambilan Cucian di Riwayat Transaksi -->
+        <Grid x:Name="modalPelunasan" Grid.ColumnSpan="2" Grid.RowSpan="2" Background="#D90F172A" Visibility="Collapsed">
+            <Border Background="White" CornerRadius="16" Padding="25" Width="500" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    BorderBrush="#10B981" BorderThickness="2">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.4" Color="Black"/>
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Header Modal Pelunasan -->
+                    <Grid Margin="0,0,0,15">
+                        <StackPanel>
+                            <TextBlock x:Name="lblModalPelunasanTitle" Text="Pelunasan &amp; Pengambilan Cucian" FontSize="18" FontWeight="Bold" Foreground="#047857"/>
+                            <TextBlock x:Name="lblModalPelunasanSub" Text="Selesaikan pembayaran cucian saat pelanggan mengambil pakaian" FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
+                        </StackPanel>
+                        <Button Content="✕" Width="32" Height="32" FontWeight="Bold" FontSize="16" Style="{StaticResource SecondaryButton}" 
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtnBatalPelunasan_Click"/>
+                    </Grid>
+
+                    <!-- Info Ringkasan Cucian -->
+                    <Border Background="#F1F5F9" CornerRadius="8" Padding="12" Margin="0,0,0,15">
+                        <StackPanel>
+                            <Grid Margin="0,3">
+                                <TextBlock Text="Kode Transaksi:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblModalKodeTrx" Text="TRX-0001" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,3">
+                                <TextBlock Text="Pelanggan:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblModalPelanggan" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,3">
+                                <TextBlock Text="Layanan:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblModalLayanan" Text="-" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,3">
+                                <TextBlock Text="Status Pengerjaan:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblModalStatusPengerjaan" Text="Selesai" FontWeight="Bold" Foreground="#047857" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Rectangle Height="1" Fill="#CBD5E1" Margin="0,6"/>
+                            <Grid Margin="0,3">
+                                <TextBlock Text="Total Tagihan:" FontSize="13" FontWeight="Bold"/>
+                                <TextBlock x:Name="lblModalTotalTagihan" Text="Rp 0" FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Margin="0,3">
+                                <TextBlock Text="Status Pembayaran:" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="lblModalStatusBayar" Text="Belum Lunas" FontWeight="Bold" Foreground="#DC2626" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Form Input Pelunasan (Jika Belum Lunas) -->
+                    <StackPanel x:Name="panelInputPelunasan">
+                        <TextBlock Text="Pilih Metode Pembayaran:" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <RadioButton x:Name="rbModalTunai" Content="💵 Tunai (Cash)" IsChecked="True" Margin="0,0,20,0" Checked="RbModalMetode_Changed"/>
+                            <RadioButton x:Name="rbModalQris" Content="📱 QRIS (All Payment)" Checked="RbModalMetode_Changed"/>
+                        </StackPanel>
+
+                        <!-- QRIS Banner dalam Modal Pelunasan -->
+                        <Border x:Name="borderModalQris" Background="#F0FDF4" BorderBrush="#22C55E" BorderThickness="1.5" CornerRadius="8" Padding="10" Margin="0,0,0,12" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="White" BorderBrush="#22C55E" BorderThickness="1" CornerRadius="6" Padding="3" Margin="0,0,10,0" Cursor="Hand" MouseLeftButtonDown="QrisImage_Click">
+                                    <Image Source="/Assets/qris_laundry.png" Width="80" Height="110" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Scan QRIS Pelanggan" FontWeight="Bold" FontSize="12" Foreground="#15803D"/>
+                                    <TextBlock Text="Minta pelanggan scan barcode di samping via GoPay, BCA, OVO, DANA, dll." FontSize="10.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                    <TextBlock Text="* Nominal otomatis pas sesuai total tagihan." FontSize="10" FontStyle="Italic" Foreground="#16A34A"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Input Uang Bayar Tunai -->
+                        <StackPanel x:Name="panelModalInputUang" Margin="0,0,0,12">
+                            <TextBlock Text="Jumlah Uang Diterima (Rp):" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtModalUangBayar" Style="{StaticResource ModernTextBox}" Text="0" 
+                                     PreviewTextInput="DigitsOnly_PreviewTextInput" TextChanged="TxtModalUangBayar_TextChanged"/>
+                            <Grid Margin="0,6,0,0">
+                                <TextBlock Text="Kembalian:" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="lblModalKembali" Text="Rp 0" FontWeight="Bold" Foreground="#047857" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Action Buttons -->
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Batal" Height="38" Margin="0,0,6,0" Style="{StaticResource SecondaryButton}" Click="BtnBatalPelunasan_Click"/>
+                        <Button x:Name="btnSimpanPelunasan" Grid.Column="1" Content="✓ Lunasi &amp; Serahkan" Height="38" Margin="6,0,0,0" Style="{StaticResource SuccessButton}" Click="BtnSimpanPelunasan_Click"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </Window>

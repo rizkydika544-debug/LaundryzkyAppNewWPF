@@ -344,6 +344,26 @@ namespace LaundryzkyWPF.Views
                     return;
                 }
 
+                // VALIDASI: Harus sudah "Ambil Tugas" dulu (status sedang_cuci) dan tercatat atas nama kamu
+                if (selected.StatusCuci != "sedang_cuci")
+                {
+                    MessageBox.Show(
+                        "Anda belum mengambil tugas pencucian ini!\n\n" +
+                        "Silakan tekan tombol 'Ambil & Mulai Pengerjaan' terlebih dahulu sebelum bisa menandai selesai.\n" +
+                        "Ini untuk memastikan Anda benar-benar mengerjakan cucian ini.",
+                        "Wajib Ambil Tugas Dulu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (selected.IdPetugasCuci != _currentUser.IdUser)
+                {
+                    MessageBox.Show(
+                        $"Cucian ini sedang dikerjakan oleh petugas cuci lain ({selected.PetugasCuci})!\n\n" +
+                        "Anda tidak dapat menyelesaikan tugas milik petugas lain.",
+                        "Bukan Tugas Anda", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 UpdateStatusCuci(selected.IdTransaksi, "selesai", selected.StatusSetrika);
             }
             else
@@ -354,10 +374,36 @@ namespace LaundryzkyWPF.Views
                     return;
                 }
 
-                // Bagian Setrika menyelesaikan setrika
+                // Bagian Setrika: cek apakah cuci sudah selesai
                 if (!isSetrikaSaja && selected.StatusCuci != "selesai" && selected.StatusCuci != "tidak_perlu")
                 {
                     MessageBox.Show("Bagian cuci belum selesai! Anda tidak bisa menyelesaikan setrika.", "Peringatan", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (selected.StatusSetrika == "selesai")
+                {
+                    MessageBox.Show("Penyetrikaan sudah berstatus selesai!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // VALIDASI: Harus sudah "Ambil Tugas" dulu (status sedang_setrika) dan tercatat atas nama kamu
+                if (selected.StatusSetrika != "sedang_setrika")
+                {
+                    MessageBox.Show(
+                        "Anda belum mengambil tugas penyetrikaan ini!\n\n" +
+                        "Silakan tekan tombol 'Ambil & Mulai Pengerjaan' terlebih dahulu sebelum bisa menandai selesai.\n" +
+                        "Ini untuk memastikan Anda benar-benar mengerjakan setrika pakaian ini.",
+                        "Wajib Ambil Tugas Dulu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (selected.IdPetugasSetrika != _currentUser.IdUser)
+                {
+                    MessageBox.Show(
+                        $"Setrika ini sedang dikerjakan oleh petugas lain ({selected.PetugasSetrika})!\n\n" +
+                        "Anda tidak dapat menyelesaikan tugas milik petugas lain.",
+                        "Bukan Tugas Anda", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 

@@ -16,6 +16,7 @@ namespace LaundryzkyWPF.Views
             decimal beratKg,
             decimal totalTagihan,
             string statusBayar,
+            string metodeBayar,
             decimal bayar,
             decimal kembali,
             string kasir,
@@ -32,6 +33,7 @@ namespace LaundryzkyWPF.Views
             lblTarif.Text = $"Rp {tarifPerKg:N0} /Kg";
             lblBerat.Text = $"{beratKg} Kg";
             lblTotal.Text = $"Rp {totalTagihan:N0}";
+            lblMetodeBayar.Text = string.IsNullOrWhiteSpace(metodeBayar) ? "Tunai" : metodeBayar;
             lblKasir.Text = kasir;
             lblTanggalMasuk.Text = tglMasuk.ToString("dd-MM-yyyy HH:mm");
             lblEstimasi.Text = estimasi.ToString("dd-MM-yyyy");

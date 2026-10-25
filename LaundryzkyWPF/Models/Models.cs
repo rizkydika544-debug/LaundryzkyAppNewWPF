@@ -111,5 +111,10 @@ namespace LaundryzkyWPF.Models
             "lunas" => "Lunas",
             _ => StatusPembayaran?.Replace("_", " ") ?? ""
         };
+
+        public bool IsBelumBayar => StatusPembayaran?.Equals("belum", StringComparison.OrdinalIgnoreCase) == true;
+        public bool IsLunas => StatusPembayaran?.Equals("lunas", StringComparison.OrdinalIgnoreCase) == true;
+        public bool IsSelesaiDikerjakan => Status?.Equals("selesai", StringComparison.OrdinalIgnoreCase) == true;
+        public bool IsSudahDiambil => Status?.Equals("diambil", StringComparison.OrdinalIgnoreCase) == true;
     }
 }

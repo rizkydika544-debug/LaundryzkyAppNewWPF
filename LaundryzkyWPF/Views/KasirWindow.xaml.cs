@@ -119,6 +119,7 @@ namespace LaundryzkyWPF.Views
                             th.estimasi_selesai,
                             th.status,
                             th.status_pembayaran,
+                            IFNULL(th.metode_pembayaran, 'Tunai') AS metode_pembayaran,
                             th.bayar,
                             th.kembali,
                             th.status_cuci,
@@ -149,6 +150,7 @@ namespace LaundryzkyWPF.Views
                                 EstimasiSelesai = r["estimasi_selesai"] == DBNull.Value ? null : Convert.ToDateTime(r["estimasi_selesai"]),
                                 Status = r["status"].ToString() ?? "menunggu",
                                 StatusPembayaran = r["status_pembayaran"].ToString() ?? "belum",
+                                MetodePembayaran = r["metode_pembayaran"].ToString() ?? "Tunai",
                                 Bayar = Convert.ToDecimal(r["bayar"]),
                                 Kembali = Convert.ToDecimal(r["kembali"]),
                                 StatusCuci = r["status_cuci"].ToString() ?? "menunggu",
@@ -207,6 +209,12 @@ namespace LaundryzkyWPF.Views
                 lblStrukTotal.Text = "Rp 0";
             }
 
+            // Jika QRIS dipilih, otomatis isi nominal pas sesuai total tagihan
+            if (rbMetodeQris != null && rbMetodeQris.IsChecked == true && rbBayarSekarang != null && rbBayarSekarang.IsChecked == true)
+            {
+                txtUangBayar.Text = ((long)_totalTagihan).ToString();
+            }
+
             HitungKembalian();
         }
 
@@ -215,16 +223,123 @@ namespace LaundryzkyWPF.Views
             if (txtUangBayar == null || lblStrukBayar == null || lblStrukKembali == null)
                 return;
 
+            bool isBayarNanti = rbBayarNanti != null && rbBayarNanti.IsChecked == true;
+            bool isQris = rbMetodeQris != null && rbMetodeQris.IsChecked == true;
+
+            if (lblStrukMetode != null)
+            {
+                if (isBayarNanti)
+                    lblStrukMetode.Text = "Bayar Saat Pengambilan";
+                else if (isQris)
+                    lblStrukMetode.Text = "QRIS (All Payment)";
+                else
+                    lblStrukMetode.Text = "Tunai (Cash)";
+            }
+
+            if (isBayarNanti)
+            {
+                lblStrukBayar.Text = "Rp 0 (Saat Ambil)";
+                lblStrukKembali.Text = "Belum Bayar";
+                lblStrukKembali.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38)); // Merah
+                return;
+            }
+
+            if (isQris)
+            {
+                lblStrukBayar.Text = $"Rp {_totalTagihan:N0} (QRIS)";
+                lblStrukKembali.Text = "Rp 0 (Uang Pas)";
+                lblStrukKembali.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush"); // Hijau
+                return;
+            }
+
             if (decimal.TryParse(txtUangBayar.Text, out decimal bayar))
             {
                 lblStrukBayar.Text = $"Rp {bayar:N0}";
-                decimal kembali = bayar - _totalTagihan;
-                lblStrukKembali.Text = kembali >= 0 ? $"Rp {kembali:N0}" : "Rp 0 (Kurang)";
+
+                if (_totalTagihan <= 0)
+                {
+                    lblStrukKembali.Text = "Rp 0";
+                    lblStrukKembali.Foreground = (System.Windows.Media.Brush)FindResource("MutedTextBrush");
+                    return;
+                }
+
+                decimal selisih = bayar - _totalTagihan;
+                if (selisih > 0)
+                {
+                    lblStrukKembali.Text = $"Rp {selisih:N0}";
+                    lblStrukKembali.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush"); // Hijau
+                }
+                else if (selisih == 0)
+                {
+                    lblStrukKembali.Text = "Rp 0 (Uang Pas)";
+                    lblStrukKembali.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush"); // Hijau
+                }
+                else
+                {
+                    decimal kurang = Math.Abs(selisih);
+                    lblStrukKembali.Text = $"-Rp {kurang:N0} (Kurang)";
+                    lblStrukKembali.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38)); // Merah
+                }
             }
             else
             {
                 lblStrukBayar.Text = "Rp 0";
-                lblStrukKembali.Text = "Rp 0";
+                if (_totalTagihan > 0)
+                {
+                    lblStrukKembali.Text = $"-Rp {_totalTagihan:N0} (Kurang)";
+                    lblStrukKembali.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38)); // Merah
+                }
+                else
+                {
+                    lblStrukKembali.Text = "Rp 0";
+                    lblStrukKembali.Foreground = (System.Windows.Media.Brush)FindResource("MutedTextBrush");
+                }
+            }
+        }
+
+        private void RbOpsiBayar_Changed(object sender, RoutedEventArgs e)
+        {
+            if (txtUangBayar == null || panelMetodeBayar == null) return;
+
+            if (rbBayarNanti.IsChecked == true)
+            {
+                panelMetodeBayar.Visibility = Visibility.Collapsed;
+                if (borderQrisInfo != null) borderQrisInfo.Visibility = Visibility.Collapsed;
+                if (panelInputBayar != null) panelInputBayar.Visibility = Visibility.Collapsed;
+                txtUangBayar.Text = "0";
+            }
+            else
+            {
+                panelMetodeBayar.Visibility = Visibility.Visible;
+                UpdateMetodeBayarView();
+            }
+
+            HitungKembalian();
+        }
+
+        private void RbMetodeBayar_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateMetodeBayarView();
+            HitungKembalian();
+        }
+
+        private void UpdateMetodeBayarView()
+        {
+            if (rbMetodeQris == null || borderQrisInfo == null || panelInputBayar == null) return;
+
+            if (rbMetodeQris.IsChecked == true)
+            {
+                // Mode QRIS All Payment
+                borderQrisInfo.Visibility = Visibility.Visible;
+                panelInputBayar.Visibility = Visibility.Collapsed;
+                txtUangBayar.Text = ((long)_totalTagihan).ToString();
+            }
+            else
+            {
+                // Mode Tunai (Cash)
+                borderQrisInfo.Visibility = Visibility.Collapsed;
+                panelInputBayar.Visibility = Visibility.Visible;
+                txtUangBayar.IsEnabled = true;
             }
         }
 
@@ -325,14 +440,47 @@ namespace LaundryzkyWPF.Views
 
             decimal.TryParse(txtUangBayar.Text, out decimal bayar);
             bool isLunas = rbBayarSekarang.IsChecked == true;
+
+            // Validasi Logika Pembayaran:
+            if (isLunas)
+            {
+                if (bayar <= 0)
+                {
+                    MessageBox.Show(
+                        "Opsi pembayaran 'Bayar Sekarang (Lunas)' dipilih, tetapi uang yang diterima masih Rp 0!\n\n" +
+                        "Silakan masukkan jumlah uang yang dibayarkan pelanggan di kolom 'Jumlah Uang Diterima',\n" +
+                        "atau pilih opsi 'Bayar Saat Ambil' jika pelanggan belum membayar sekarang.",
+                        "Uang Pembayaran Belum Diinput", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    txtUangBayar.Focus();
+                    return;
+                }
+
+                if (bayar < _totalTagihan)
+                {
+                    decimal kurang = _totalTagihan - bayar;
+                    MessageBox.Show(
+                        $"Uang pembayaran kurang Rp {kurang:N0}!\n\n" +
+                        $"Total Tagihan: Rp {_totalTagihan:N0}\n" +
+                        $"Uang Diterima: Rp {bayar:N0}\n\n" +
+                        "Uang harus pas atau lebih untuk opsi 'Bayar Sekarang (Lunas)', atau pilih opsi 'Bayar Saat Ambil'.",
+                        "Uang Pembayaran Kurang", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    txtUangBayar.Focus();
+                    return;
+                }
+            }
+
             string statusBayar = isLunas ? "lunas" : "belum";
             decimal kembali = isLunas && bayar >= _totalTagihan ? (bayar - _totalTagihan) : 0;
             string catatan = txtCatatanKasir.Text.Trim();
             DateTime estimasi = dpEstimasi.SelectedDate ?? DateTime.Now.AddDays(2);
             DateTime tglMasuk = DateTime.Now;
 
+            string infoUang = isLunas 
+                ? $"\nBayar: Rp {bayar:N0}\nKembalian: Rp {kembali:N0}" 
+                : "\n(Bayar Saat Pengambilan Pakaian)";
+
             var konfirmasi = MessageBox.Show(
-                $"Simpan transaksi ini?\n\nPelanggan: {pel.NamaPelanggan}\nLayanan: {lay.NamaLayanan}\nBerat: {berat} Kg\nTotal: Rp {_totalTagihan:N0}\nStatus Pembayaran: {(isLunas ? "Lunas" : "Belum Bayar")}",
+                $"Simpan transaksi ini?\n\nPelanggan: {pel.NamaPelanggan}\nLayanan: {lay.NamaLayanan}\nBerat: {berat} Kg\nTotal Tagihan: Rp {_totalTagihan:N0}\nStatus Pembayaran: {(isLunas ? "Lunas" : "Belum Bayar")}{infoUang}",
                 "Konfirmasi Simpan Transaksi",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -382,11 +530,21 @@ namespace LaundryzkyWPF.Views
                             string initStatusCuci = isSetrikaSaja ? "tidak_perlu" : "menunggu";
                             string initStatusSetrika = isCuciSaja ? "tidak_perlu" : "menunggu";
 
+                            string metodeBayarDB = "Tunai";
+                            if (isLunas)
+                            {
+                                metodeBayarDB = (rbMetodeQris != null && rbMetodeQris.IsChecked == true) ? "QRIS" : "Tunai";
+                            }
+                            else
+                            {
+                                metodeBayarDB = "-";
+                            }
+
                             // 1. Insert header
                             string qHeader = @"INSERT INTO tbl_transaksi_header 
                                 (id_pelanggan, id_user, tanggal_masuk, estimasi_selesai, status, status_pembayaran, metode_pembayaran, bayar, kembali, status_cuci, status_setrika, catatan_saku)
                                 VALUES 
-                                (@pel, @user, @tgl, @est, 'menunggu', @sb, 'Tunai', @byr, @kmb, @sc, @ss, @cat);
+                                (@pel, @user, @tgl, @est, 'menunggu', @sb, @metode, @byr, @kmb, @sc, @ss, @cat);
                                 SELECT LAST_INSERT_ID();";
 
                             int newIdTrx;
@@ -397,6 +555,7 @@ namespace LaundryzkyWPF.Views
                                 cmdH.Parameters.AddWithValue("@tgl", tglMasuk.ToString("yyyy-MM-dd HH:mm:ss"));
                                 cmdH.Parameters.AddWithValue("@est", estimasi.ToString("yyyy-MM-dd"));
                                 cmdH.Parameters.AddWithValue("@sb", statusBayar);
+                                cmdH.Parameters.AddWithValue("@metode", metodeBayarDB);
                                 cmdH.Parameters.AddWithValue("@byr", isLunas ? bayar : 0);
                                 cmdH.Parameters.AddWithValue("@kmb", kembali);
                                 cmdH.Parameters.AddWithValue("@sc", initStatusCuci);
@@ -435,6 +594,7 @@ namespace LaundryzkyWPF.Views
                                 berat,
                                 _totalTagihan,
                                 statusBayar,
+                                metodeBayarDB,
                                 bayar,
                                 kembali,
                                 _currentUser.NamaUser,
@@ -555,6 +715,7 @@ namespace LaundryzkyWPF.Views
                     trx.BeratKg,
                     trx.Subtotal,
                     trx.StatusPembayaran,
+                    trx.MetodePembayaran,
                     trx.Bayar,
                     trx.Kembali,
                     _currentUser.NamaUser,
@@ -563,6 +724,237 @@ namespace LaundryzkyWPF.Views
                     trx.CatatanSaku ?? ""
                 );
                 notaWin.ShowDialog();
+            }
+        }
+
+        private Transaksi? _selectedTrxPelunasan = null;
+
+        private void BtnBayarAmbilRiwayat_Click(object sender, RoutedEventArgs e)
+        {
+            if (((FrameworkElement)sender).DataContext is not Transaksi trx) return;
+
+            _selectedTrxPelunasan = trx;
+            lblModalKodeTrx.Text = trx.KodeTransaksi;
+            lblModalPelanggan.Text = trx.NamaPelanggan;
+            lblModalLayanan.Text = $"{trx.NamaLayanan} ({trx.BeratKg} Kg)";
+            lblModalTotalTagihan.Text = $"Rp {trx.Subtotal:N0}";
+            lblModalStatusPengerjaan.Text = trx.StatusDisplay;
+
+            bool isSudahLunas = trx.IsLunas;
+            bool isSudahDiambil = trx.IsSudahDiambil;
+
+            if (isSudahDiambil)
+            {
+                MessageBox.Show($"Cucian {trx.KodeTransaksi} sudah pernah diambil sebelumnya!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (isSudahLunas)
+            {
+                lblModalStatusBayar.Text = "LUNAS";
+                lblModalStatusBayar.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush");
+                panelInputPelunasan.Visibility = Visibility.Collapsed;
+                btnSimpanPelunasan.Content = "✓ Serahkan Cucian (Sudah Lunas)";
+            }
+            else
+            {
+                lblModalStatusBayar.Text = "BELUM LUNAS";
+                lblModalStatusBayar.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38));
+                panelInputPelunasan.Visibility = Visibility.Visible;
+                rbModalTunai.IsChecked = true;
+                txtModalUangBayar.Text = "0";
+                lblModalKembali.Text = $"-Rp {trx.Subtotal:N0} (Kurang)";
+                lblModalKembali.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38));
+                borderModalQris.Visibility = Visibility.Collapsed;
+                panelModalInputUang.Visibility = Visibility.Visible;
+                btnSimpanPelunasan.Content = "✓ Lunasi & Serahkan";
+            }
+
+            modalPelunasan.Visibility = Visibility.Visible;
+        }
+
+        private void RbModalMetode_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_selectedTrxPelunasan == null || borderModalQris == null || panelModalInputUang == null) return;
+
+            if (rbModalQris.IsChecked == true)
+            {
+                borderModalQris.Visibility = Visibility.Visible;
+                panelModalInputUang.Visibility = Visibility.Collapsed;
+                lblModalKembali.Text = "Rp 0 (Uang Pas)";
+                lblModalKembali.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush");
+            }
+            else
+            {
+                borderModalQris.Visibility = Visibility.Collapsed;
+                panelModalInputUang.Visibility = Visibility.Visible;
+                HitungModalKembalian();
+            }
+        }
+
+        private void TxtModalUangBayar_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            HitungModalKembalian();
+        }
+
+        private void HitungModalKembalian()
+        {
+            if (_selectedTrxPelunasan == null || lblModalKembali == null || txtModalUangBayar == null) return;
+
+            decimal tagihan = _selectedTrxPelunasan.Subtotal;
+            if (decimal.TryParse(txtModalUangBayar.Text, out decimal bayar))
+            {
+                decimal selisih = bayar - tagihan;
+                if (selisih > 0)
+                {
+                    lblModalKembali.Text = $"Rp {selisih:N0}";
+                    lblModalKembali.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush");
+                }
+                else if (selisih == 0)
+                {
+                    lblModalKembali.Text = "Rp 0 (Uang Pas)";
+                    lblModalKembali.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush");
+                }
+                else
+                {
+                    decimal kurang = Math.Abs(selisih);
+                    lblModalKembali.Text = $"-Rp {kurang:N0} (Kurang)";
+                    lblModalKembali.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38));
+                }
+            }
+            else
+            {
+                lblModalKembali.Text = $"-Rp {tagihan:N0} (Kurang)";
+                lblModalKembali.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38));
+            }
+        }
+
+        private void BtnBatalPelunasan_Click(object sender, RoutedEventArgs e)
+        {
+            modalPelunasan.Visibility = Visibility.Collapsed;
+            _selectedTrxPelunasan = null;
+        }
+
+        private void BtnSimpanPelunasan_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedTrxPelunasan == null) return;
+
+            decimal totalTagihan = _selectedTrxPelunasan.Subtotal;
+            bool isSudahLunas = _selectedTrxPelunasan.IsLunas;
+            string metodeBayar = isSudahLunas ? _selectedTrxPelunasan.MetodePembayaran : "Tunai";
+            decimal bayar = _selectedTrxPelunasan.Bayar;
+            decimal kembali = _selectedTrxPelunasan.Kembali;
+
+            if (!isSudahLunas)
+            {
+                if (rbModalQris.IsChecked == true)
+                {
+                    metodeBayar = "QRIS";
+                    bayar = totalTagihan;
+                    kembali = 0;
+                }
+                else
+                {
+                    metodeBayar = "Tunai";
+                    if (!decimal.TryParse(txtModalUangBayar.Text, out bayar) || bayar <= 0)
+                    {
+                        MessageBox.Show("Uang yang diterima belum diisi atau masih Rp 0!", "Peringatan", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        txtModalUangBayar.Focus();
+                        return;
+                    }
+
+                    if (bayar < totalTagihan)
+                    {
+                        decimal kurang = totalTagihan - bayar;
+                        MessageBox.Show($"Uang yang diterima kurang Rp {kurang:N0}!", "Uang Kurang", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        txtModalUangBayar.Focus();
+                        return;
+                    }
+
+                    kembali = bayar - totalTagihan;
+                }
+            }
+
+            var konfirm = MessageBox.Show(
+                $"Konfirmasi Pelunasan & Penyerahan Cucian:\n\n" +
+                $"Kode: {_selectedTrxPelunasan.KodeTransaksi}\n" +
+                $"Pelanggan: {_selectedTrxPelunasan.NamaPelanggan}\n" +
+                $"Metode: {metodeBayar}\n" +
+                $"Total: Rp {totalTagihan:N0}\n" +
+                (isSudahLunas ? "(Cucian Sudah Lunas Sebelumnya)\n" : $"Bayar: Rp {bayar:N0}\nKembalian: Rp {kembali:N0}\n") +
+                $"\nApakah pakaian sudah diserahkan ke pelanggan?",
+                "Konfirmasi Penyerahan", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (konfirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                using (MySqlConnection conn = Koneksi.GetConn())
+                {
+                    conn.Open();
+                    string q = @"UPDATE tbl_transaksi_header 
+                                 SET status = 'diambil', 
+                                     status_pembayaran = 'lunas', 
+                                     metode_pembayaran = @metode, 
+                                     bayar = @byr, 
+                                     kembali = @kmb
+                                 WHERE id_transaksi = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(q, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@metode", metodeBayar);
+                        cmd.Parameters.AddWithValue("@byr", bayar);
+                        cmd.Parameters.AddWithValue("@kmb", kembali);
+                        cmd.Parameters.AddWithValue("@id", _selectedTrxPelunasan.IdTransaksi);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                MessageBox.Show($"Transaksi {_selectedTrxPelunasan.KodeTransaksi} telah LUNAS dan status diubah menjadi 'Sudah Diambil'!", "Sukses", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Otomatis buka nota lunas terbaru
+                var nota = new NotaWindow(
+                    _selectedTrxPelunasan.KodeTransaksi,
+                    _selectedTrxPelunasan.NamaPelanggan,
+                    _selectedTrxPelunasan.NoHp,
+                    _selectedTrxPelunasan.NamaLayanan,
+                    _selectedTrxPelunasan.HargaPerKg,
+                    _selectedTrxPelunasan.BeratKg,
+                    totalTagihan,
+                    "lunas",
+                    metodeBayar,
+                    bayar,
+                    kembali,
+                    _currentUser.NamaUser,
+                    _selectedTrxPelunasan.TanggalMasuk,
+                    DateTime.Now,
+                    _selectedTrxPelunasan.CatatanSaku ?? ""
+                );
+                nota.ShowDialog();
+
+                modalPelunasan.Visibility = Visibility.Collapsed;
+                _selectedTrxPelunasan = null;
+                MuatRiwayatTransaksi();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Gagal update pelunasan transaksi: " + ex.Message, "Error Database", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void QrisImage_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (modalQrisZoom != null)
+            {
+                modalQrisZoom.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void BtnTutupModalQris_Click(object sender, RoutedEventArgs e)
+        {
+            if (modalQrisZoom != null)
+            {
+                modalQrisZoom.Visibility = Visibility.Collapsed;
             }
         }
 
