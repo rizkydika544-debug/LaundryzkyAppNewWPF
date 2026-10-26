@@ -743,21 +743,49 @@ namespace LaundryzkyWPF.Views
             bool isSudahLunas = trx.IsLunas;
             bool isSudahDiambil = trx.IsSudahDiambil;
 
+            bool isSudahSelesaiDikerjakan = trx.IsSelesaiDikerjakan;
+
             if (isSudahDiambil)
             {
-                MessageBox.Show($"Cucian {trx.KodeTransaksi} sudah pernah diambil sebelumnya!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Cucian {trx.KodeTransaksi} sudah pernah diserahkan/diambil sebelumnya!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             if (isSudahLunas)
             {
+                // Sudah lunas tapi mau diambil
+                if (!isSudahSelesaiDikerjakan)
+                {
+                    MessageBox.Show(
+                        $"Cucian {trx.KodeTransaksi} sudah LUNAS, namun status pengerjaannya saat ini masih '{trx.StatusDisplay}'!\n\n" +
+                        "Pakaian belum selesai dikerjakan oleh bagian cuci/setrika sehingga belum bisa diserahkan ke pelanggan.",
+                        "Cucian Belum Selesai", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                lblModalPelunasanTitle.Text = "Penyerahan Cucian";
+                lblModalPelunasanSub.Text = "Pakaian sudah berstatus LUNAS dan SELESAI, siap diserahkan ke pelanggan";
                 lblModalStatusBayar.Text = "LUNAS";
                 lblModalStatusBayar.Foreground = (System.Windows.Media.Brush)FindResource("SuccessBrush");
                 panelInputPelunasan.Visibility = Visibility.Collapsed;
-                btnSimpanPelunasan.Content = "✓ Serahkan Cucian (Sudah Lunas)";
+                btnSimpanPelunasan.Content = "✓ Serahkan Cucian ke Pelanggan";
             }
             else
             {
+                // Belum lunas
+                if (isSudahSelesaiDikerjakan)
+                {
+                    lblModalPelunasanTitle.Text = "Pelunasan & Penyerahan Cucian";
+                    lblModalPelunasanSub.Text = "Cucian sudah SELESAI. Lunasi tagihan sebelum pakaian diserahkan ke pelanggan.";
+                    btnSimpanPelunasan.Content = "✓ Lunasi & Serahkan Pakaian";
+                }
+                else
+                {
+                    lblModalPelunasanTitle.Text = "Pelunasan Tagihan (Cucian Sedang Diproses)";
+                    lblModalPelunasanSub.Text = $"Cucian masih '{trx.StatusDisplay}'. Hanya melunasi tagihan (Pakaian TIDAK diserahkan sekarang).";
+                    btnSimpanPelunasan.Content = "✓ Lunasi Pembayaran";
+                }
+
                 lblModalStatusBayar.Text = "BELUM LUNAS";
                 lblModalStatusBayar.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38));
                 panelInputPelunasan.Visibility = Visibility.Visible;
@@ -767,7 +795,6 @@ namespace LaundryzkyWPF.Views
                 lblModalKembali.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38));
                 borderModalQris.Visibility = Visibility.Collapsed;
                 panelModalInputUang.Visibility = Visibility.Visible;
-                btnSimpanPelunasan.Content = "✓ Lunasi & Serahkan";
             }
 
             modalPelunasan.Visibility = Visibility.Visible;
@@ -841,9 +868,15 @@ namespace LaundryzkyWPF.Views
 
             decimal totalTagihan = _selectedTrxPelunasan.Subtotal;
             bool isSudahLunas = _selectedTrxPelunasan.IsLunas;
+            bool isSudahSelesai = _selectedTrxPelunasan.IsSelesaiDikerjakan;
             string metodeBayar = isSudahLunas ? _selectedTrxPelunasan.MetodePembayaran : "Tunai";
             decimal bayar = _selectedTrxPelunasan.Bayar;
             decimal kembali = _selectedTrxPelunasan.Kembali;
+
+            // Tentukan status akhir:
+            // Jika cucian sudah selesai dikerjakan, maka diserahkan ('diambil').
+            // Jika cucian masih dicuci/disetrika, status transaksi tetap sama (status pengerjaan tidak berubah), hanya status pembayaran jadi 'lunas'.
+            string targetStatusHeader = isSudahSelesai ? "diambil" : _selectedTrxPelunasan.Status;
 
             if (!isSudahLunas)
             {
@@ -875,15 +908,20 @@ namespace LaundryzkyWPF.Views
                 }
             }
 
+            string pesanAksi = isSudahSelesai 
+                ? "Apakah pembayaran valid dan pakaian diserahkan ke pelanggan sekarang?" 
+                : "Cucian saat ini masih dalam proses pengerjaan. Pelanggan hanya membayar tagihan (pakaian belum diserahkan). Lanjutkan pelunasan?";
+
             var konfirm = MessageBox.Show(
-                $"Konfirmasi Pelunasan & Penyerahan Cucian:\n\n" +
+                $"Konfirmasi Transaksi:\n\n" +
                 $"Kode: {_selectedTrxPelunasan.KodeTransaksi}\n" +
                 $"Pelanggan: {_selectedTrxPelunasan.NamaPelanggan}\n" +
+                $"Status Pengerjaan: {_selectedTrxPelunasan.StatusDisplay}\n" +
                 $"Metode: {metodeBayar}\n" +
                 $"Total: Rp {totalTagihan:N0}\n" +
                 (isSudahLunas ? "(Cucian Sudah Lunas Sebelumnya)\n" : $"Bayar: Rp {bayar:N0}\nKembalian: Rp {kembali:N0}\n") +
-                $"\nApakah pakaian sudah diserahkan ke pelanggan?",
-                "Konfirmasi Penyerahan", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                $"\n{pesanAksi}",
+                "Konfirmasi", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (konfirm != MessageBoxResult.Yes) return;
 
@@ -893,7 +931,7 @@ namespace LaundryzkyWPF.Views
                 {
                     conn.Open();
                     string q = @"UPDATE tbl_transaksi_header 
-                                 SET status = 'diambil', 
+                                 SET status = @sh, 
                                      status_pembayaran = 'lunas', 
                                      metode_pembayaran = @metode, 
                                      bayar = @byr, 
@@ -902,6 +940,7 @@ namespace LaundryzkyWPF.Views
 
                     using (MySqlCommand cmd = new MySqlCommand(q, conn))
                     {
+                        cmd.Parameters.AddWithValue("@sh", targetStatusHeader);
                         cmd.Parameters.AddWithValue("@metode", metodeBayar);
                         cmd.Parameters.AddWithValue("@byr", bayar);
                         cmd.Parameters.AddWithValue("@kmb", kembali);
@@ -910,7 +949,14 @@ namespace LaundryzkyWPF.Views
                     }
                 }
 
-                MessageBox.Show($"Transaksi {_selectedTrxPelunasan.KodeTransaksi} telah LUNAS dan status diubah menjadi 'Sudah Diambil'!", "Sukses", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (isSudahSelesai)
+                {
+                    MessageBox.Show($"Transaksi {_selectedTrxPelunasan.KodeTransaksi} telah LUNAS dan pakaian telah diserahkan (Status: Sudah Diambil)!", "Sukses", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show($"Pembayaran untuk transaksi {_selectedTrxPelunasan.KodeTransaksi} berhasil LUNAS!\nStatus pengerjaan tetap '{_selectedTrxPelunasan.StatusDisplay}' menunggu selesai dikerjakan.", "Pelunasan Berhasil", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
 
                 // Otomatis buka nota lunas terbaru
                 var nota = new NotaWindow(
