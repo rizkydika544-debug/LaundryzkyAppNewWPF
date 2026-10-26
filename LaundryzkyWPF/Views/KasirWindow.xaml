@@ -279,16 +279,20 @@
                                 <DataGridTextColumn Header="Status Cuci" Binding="{Binding StatusCuciDisplay}" Width="100"/>
                                 <DataGridTextColumn Header="Status Setrika" Binding="{Binding StatusSetrikaDisplay}" Width="100"/>
                                 <DataGridTextColumn Header="Catatan Saku" Binding="{Binding CatatanSaku}" Width="*"/>
-                                <DataGridTemplateColumn Header="Aksi" Width="240">
+                                <DataGridTemplateColumn Header="Aksi" Width="305">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
                                                 <!-- Tombol Bayar / Ambil Cucian -->
-                                                <Button Content="💳 Bayar / Ambil" Height="28" Width="105" Margin="0,0,6,0" Padding="6,2" FontSize="11" FontWeight="SemiBold" 
+                                                <Button Content="💳 Bayar / Ambil" Height="28" Width="105" Margin="0,0,5,0" Padding="6,2" FontSize="11" FontWeight="SemiBold" 
                                                         Style="{StaticResource SuccessButton}" Click="BtnBayarAmbilRiwayat_Click"/>
                                                 <!-- Tombol Cetak Nota -->
-                                                <Button Content="📄 Nota" Height="28" Width="65" Padding="6,2" FontSize="11" 
+                                                <Button Content="📄 Nota" Height="28" Width="65" Margin="0,0,5,0" Padding="6,2" FontSize="11" 
                                                         Style="{StaticResource PrimaryButton}" Click="BtnCetakNotaRiwayat_Click"/>
+                                                <!-- Tombol Batalkan Transaksi -->
+                                                <Button Content="❌ Batal" Height="28" Width="70" Padding="4,2" FontSize="11" FontWeight="SemiBold"
+                                                        Background="#FEE2E2" Foreground="#DC2626" BorderBrush="#FCA5A5" BorderThickness="1"
+                                                        Click="BtnBatalkanTransaksi_Click"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

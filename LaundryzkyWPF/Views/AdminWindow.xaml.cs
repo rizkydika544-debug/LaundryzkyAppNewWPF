@@ -495,6 +495,69 @@ namespace LaundryzkyWPF.Views
             }
         }
 
+        private void BtnEksporCsv_Click(object sender, RoutedEventArgs e)
+        {
+            if (_listLaporan == null || _listLaporan.Count == 0)
+            {
+                MessageBox.Show("Tidak ada data transaksi yang dapat diekspor!", "Peringatan", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var sfd = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "CSV File (*.csv)|*.csv|All Files (*.*)|*.*",
+                    FileName = $"Laporan_Laundryzky_{DateTime.Now:yyyyMMdd_HHmm}.csv",
+                    Title = "Simpan Laporan Transaksi ke CSV (Excel)"
+                };
+
+                if (sfd.ShowDialog() == true)
+                {
+                    var sb = new System.Text.StringBuilder();
+                    // Header CSV
+                    sb.AppendLine("No,Kode Transaksi,Pelanggan,Tanggal Masuk,Total Tagihan,Status Pembayaran,Status Pengerjaan,Petugas Cuci,Petugas Setrika,Catatan Saku");
+
+                    int no = 1;
+                    decimal totalOmzetLunas = 0;
+
+                    foreach (var t in _listLaporan)
+                    {
+                        string line = $"{no}," +
+                                      $"\"{t.KodeTransaksi}\"," +
+                                      $"\"{t.NamaPelanggan.Replace("\"", "\"\"")}\"," +
+                                      $"\"{t.TanggalMasuk:dd-MM-yyyy HH:mm}\"," +
+                                      $"{t.Subtotal}," +
+                                      $"\"{t.StatusPembayaranDisplay}\"," +
+                                      $"\"{t.StatusDisplay}\"," +
+                                      $"\"{t.PetugasCuci}\"," +
+                                      $"\"{t.PetugasSetrika}\"," +
+                                      $"\"{(t.CatatanSaku ?? "").Replace("\"", "\"\"")}\"";
+                        sb.AppendLine(line);
+
+                        if (t.StatusPembayaran.Equals("lunas", StringComparison.OrdinalIgnoreCase))
+                        {
+                            totalOmzetLunas += t.Subtotal;
+                        }
+                        no++;
+                    }
+
+                    sb.AppendLine();
+                    sb.AppendLine($",,,,TOTAL PENDAPATAN LUNAS (Rp),{totalOmzetLunas}");
+
+                    System.IO.File.WriteAllText(sfd.FileName, sb.ToString(), System.Text.Encoding.UTF8);
+
+                    MessageBox.Show(
+                        $"Laporan berhasil diekspor ke Excel (CSV)!\n\nLokasi File: {sfd.FileName}\nTotal Transaksi: {_listLaporan.Count}\nTotal Omzet Lunas: Rp {totalOmzetLunas:N0}",
+                        "Ekspor Sukses", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Gagal mengekspor laporan ke CSV: " + ex.Message, "Error Ekspor", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void BtnMenuKelolaUser_Click(object sender, RoutedEventArgs e)
         {
             lblHeaderTitle.Text = "Kelola Karyawan & Pembagian Role";

@@ -84,6 +84,7 @@ namespace LaundryzkyWPF.Models
             "diproses" => "Sedang Diproses",
             "selesai" => "Selesai",
             "diambil" => "Sudah Diambil",
+            "dibatalkan" => "Dibatalkan",
             _ => Status?.Replace("_", " ") ?? ""
         };
 
@@ -109,6 +110,7 @@ namespace LaundryzkyWPF.Models
         {
             "belum" => "Belum Bayar",
             "lunas" => "Lunas",
+            "dikembalikan" => "Dikembalikan (Refund)",
             _ => StatusPembayaran?.Replace("_", " ") ?? ""
         };
 
@@ -116,5 +118,10 @@ namespace LaundryzkyWPF.Models
         public bool IsLunas => StatusPembayaran?.Equals("lunas", StringComparison.OrdinalIgnoreCase) == true;
         public bool IsSelesaiDikerjakan => Status?.Equals("selesai", StringComparison.OrdinalIgnoreCase) == true;
         public bool IsSudahDiambil => Status?.Equals("diambil", StringComparison.OrdinalIgnoreCase) == true;
+        public bool IsDibatalkan => Status?.Equals("dibatalkan", StringComparison.OrdinalIgnoreCase) == true;
+        public bool CanDibatalkan => Status?.Equals("menunggu", StringComparison.OrdinalIgnoreCase) == true &&
+                                     StatusCuci?.Equals("sedang_cuci", StringComparison.OrdinalIgnoreCase) != true &&
+                                     StatusCuci?.Equals("selesai", StringComparison.OrdinalIgnoreCase) != true &&
+                                     StatusSetrika?.Equals("sedang_setrika", StringComparison.OrdinalIgnoreCase) != true;
     }
 }

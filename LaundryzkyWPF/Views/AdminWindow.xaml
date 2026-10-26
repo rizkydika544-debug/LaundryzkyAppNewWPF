@@ -215,11 +215,13 @@
                                 <Button Content="Tampilkan Laporan" Height="34" Padding="12,0" Style="{StaticResource PrimaryButton}" Click="BtnFilterLaporan_Click"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <TextBox x:Name="txtCariLaporan" Width="200" Height="34" Margin="0,0,10,0" Style="{StaticResource ModernTextBox}"
+                                <TextBox x:Name="txtCariLaporan" Width="180" Height="34" Margin="0,0,8,0" Style="{StaticResource ModernTextBox}"
                                          Tag="Cari pelanggan/TRX..." TextChanged="TxtCariLaporan_TextChanged"/>
-                                <Button Content="🗑️ Reset Transaksi &amp; Pelanggan" Height="34" Padding="12,0" Margin="0,0,10,0" 
+                                <Button Content="📥 Ekspor Excel (CSV)" Height="34" Padding="12,0" Margin="0,0,8,0" 
+                                        Background="#10B981" Foreground="White" Style="{StaticResource PrimaryButton}" Click="BtnEksporCsv_Click"/>
+                                <Button Content="📄 Cetak Laporan (PDF)" Height="34" Padding="12,0" Margin="0,0,8,0" Style="{StaticResource SuccessButton}" Click="BtnCetakLaporanPdf_Click"/>
+                                <Button Content="🗑️ Reset Transaksi &amp; Pelanggan" Height="34" Padding="10,0" 
                                          Background="#FEE2E2" Foreground="#991B1B" Style="{StaticResource SecondaryButton}" Click="BtnResetDatabase_Click"/>
-                                <Button Content="📄 Cetak Laporan (PDF)" Height="34" Padding="14,0" Style="{StaticResource SuccessButton}" Click="BtnCetakLaporanPdf_Click"/>
                             </StackPanel>
                         </Grid>
                         <DataGrid x:Name="dgvLaporan" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" 

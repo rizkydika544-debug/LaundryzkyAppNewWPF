@@ -727,6 +727,82 @@ namespace LaundryzkyWPF.Views
             }
         }
 
+        private void BtnBatalkanTransaksi_Click(object sender, RoutedEventArgs e)
+        {
+            if (((FrameworkElement)sender).DataContext is not Transaksi trx) return;
+
+            if (trx.IsDibatalkan)
+            {
+                MessageBox.Show($"Transaksi {trx.KodeTransaksi} sudah dalam status dibatalkan!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (trx.IsSudahDiambil)
+            {
+                MessageBox.Show($"Transaksi {trx.KodeTransaksi} sudah diambil/diserahkan ke pelanggan, tidak dapat dibatalkan!", "Peringatan", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Validasi: Apakah pakaian sudah mulai dicuci atau disetrika?
+            if (trx.StatusCuci == "sedang_cuci" || trx.StatusCuci == "selesai" || trx.StatusSetrika == "sedang_setrika" || trx.StatusSetrika == "selesai" || trx.Status == "diproses")
+            {
+                MessageBox.Show(
+                    $"Transaksi {trx.KodeTransaksi} TIDAK DAPAT DIBATALKAN!\n\n" +
+                    $"Pakaian saat ini sudah masuk proses stasiun kerja ({trx.StatusDisplay}).\n" +
+                    "Hanya pakaian yang masih berstatus 'Menunggu' dan belum diproses oleh mesin cuci/setrika yang boleh dibatalkan.",
+                    "Proses Sedang Berjalan", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string pesanRefund = trx.IsLunas 
+                ? $"\n⚠️ PERHATIAN: Transaksi ini berstatus LUNAS (Rp {trx.Subtotal:N0}). Kasir wajib MENGEMBALIKAN UANG (REFUND) kepada pelanggan sebesar Rp {trx.Subtotal:N0}!\n" 
+                : "";
+
+            var konfirm = MessageBox.Show(
+                $"Yakin ingin MEMBATALKAN transaksi {trx.KodeTransaksi}?\n\n" +
+                $"Pelanggan: {trx.NamaPelanggan}\n" +
+                $"Layanan: {trx.NamaLayanan}\n" +
+                $"Total: Rp {trx.Subtotal:N0}\n" +
+                pesanRefund +
+                "\nApakah Anda yakin ingin melanjutkan pembatalan?",
+                "Konfirmasi Pembatalan Transaksi", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (konfirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                using (MySqlConnection conn = Koneksi.GetConn())
+                {
+                    conn.Open();
+                    string statusBaruBayar = trx.IsLunas ? "dikembalikan" : "belum";
+                    string q = @"UPDATE tbl_transaksi_header 
+                                 SET status = 'dibatalkan', 
+                                     status_pembayaran = @sb,
+                                     status_cuci = 'tidak_perlu',
+                                     status_setrika = 'tidak_perlu'
+                                 WHERE id_transaksi = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(q, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@sb", statusBaruBayar);
+                        cmd.Parameters.AddWithValue("@id", trx.IdTransaksi);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                string infoSukses = trx.IsLunas 
+                    ? $"Transaksi {trx.KodeTransaksi} berhasil dibatalkan!\nHarap serahkan refund uang tunai sebesar Rp {trx.Subtotal:N0} kepada pelanggan."
+                    : $"Transaksi {trx.KodeTransaksi} berhasil dibatalkan!";
+
+                MessageBox.Show(infoSukses, "Transaksi Dibatalkan", MessageBoxButton.OK, MessageBoxImage.Information);
+                MuatRiwayatTransaksi();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Gagal membatalkan transaksi: " + ex.Message, "Error Database", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private Transaksi? _selectedTrxPelunasan = null;
 
         private void BtnBayarAmbilRiwayat_Click(object sender, RoutedEventArgs e)
