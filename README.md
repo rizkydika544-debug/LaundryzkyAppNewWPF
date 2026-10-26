@@ -33,17 +33,31 @@ Sistem memisahkan antarmuka dan tanggung jawab secara ketat menjadi 4 peran kerj
   - Laporan keuangan fleksibel dengan filter tanggal (*Date Range*) dan fitur cetak laporan ke format dokumen/PDF.
   - Fitur darurat *Reset Data Transaksi & Pelanggan* dengan konfirmasi ganda aman.
 - **Kasir (Front Office)**:
-  - Form transaksi kasir interaktif dengan kalkulasi otomatis subtotal dan uang kembalian.
-  - Validasi input ketat (hanya angka positif, tolak karakter huruf/minus).
+  - Form transaksi kasir interaktif dengan kalkulasi otomatis subtotal dan kembalian *real-time*.
+  - **Sistem Pembayaran Fleksibel (Cash & Scanable QRIS)**:
+    - Opsi *Bayar Sekarang (Lunas)* atau *Bayar Saat Ambil*.
+    - Pilihan metode Tunai (dengan hitung kembalian dan peringatan uang kurang) atau QRIS Resmi (*GoPay / BCA / All Payment*).
+    - Modal interaktif QRIS layar penuh yang dapat di-klik untuk di-scan langsung menggunakan kamera smartphone pelanggan.
+  - **Pemisahan Logika Pelunasan vs Penyerahan Fisik**:
+    - Pelanggan dapat melunasi tagihan saat pakaian masih dicuci/disetrika tanpa menyerahkan fisik pakaian sebelum selesai.
+    - Penyerahan pakaian (`diambil`) dikunci rapat hingga pakaian berstatus `selesai`.
+  - **Pembatalan Transaksi & Refund Aman**:
+    - Kasir dapat membatalkan pesanan (`❌ Batal`) selama proses pencucian/penyetrikaan belum dimulai.
+    - Jika sudah terlanjur bayar, kasir dipandu untuk mengembalikan uang secara tunai dan status pembayaran tercatat `dikembalikan`.
   - Pratinjau nota digital otomatis bergaya struk (*Thermal Receipt Window*) sebelum dicetak fisik/PDF.
   - Manajemen data pelanggan lengkap dengan pencarian data instan (*Real-time Search*).
 - **Petugas Cuci (Washing Department)**:
   - Antrean cucian masuk khusus pakaian yang membutuhkan pencucian.
+  - **Workstation Anti-Cheat**: Tombol *Tandai Selesai* terkunci sampai petugas secara sadar mengklik *Ambil & Mulai Pengerjaan*, menjamin akuntabilitas pengerjaan nyata.
   - Pencatatan nama petugas cuci secara otomatis saat tugas diambil.
   - Form pencatatan saku (*Pocket Note*) untuk mendata barang temuan pelanggan.
 - **Petugas Setrika (Ironing & Finishing Department)**:
   - Antrean tugas penyetrikaan dengan validasi alur kerja berurutan.
+  - Proteksi *Anti-Cheat* serupa (wajib ambil pengerjaan sebelum menyelesaikan).
   - Mode *Monitor Semua Progres* untuk memantau status pengerjaan keseluruhan antrean.
+- **Laporan Keuangan & Ekspor**:
+  - Filter rentang tanggal fleksibel (*Date Range*).
+  - Ekspor data laporan keuangan langsung ke format **Excel (.CSV)** dan cetak dokumen **PDF**.
 
 ---
 
@@ -55,10 +69,11 @@ Sistem memisahkan antarmuka dan tanggung jawab secara ketat menjadi 4 peran kerj
   - Jika pelanggan memilih layanan *"Setrika Saja"*, sistem otomatis menandai status cuci sebagai `Tidak Perlu` dan langsung menugaskannya ke bagian setrika.
   - Jika pelanggan memilih *"Cuci Saja"*, pakaian tidak perlu disetrika dan langsung berstatus `Selesai` setelah dicuci.
   - Bagian setrika **tidak dapat** menyelesaikan penyetrikaan jika pakaian belum selesai dicuci oleh bagian cuci.
+- **Sistem Pembatalan Terproteksi**: Transaksi yang sudah masuk tahap `sedang_cuci` atau `sedang_setrika` tidak dapat dibatalkan sembarangan demi menghindari selisih operasional di lantai kerja.
 - **Konfirmasi Tindakan Krusial (*Finishing Action Warnings*)**:
-  - Seluruh tombol penting (Logout, Simpan Transaksi, Ambil Tugas, Selesai Tugas, Simpan Catatan, Ubah Status Karyawan) dilengkapi dialog konfirmasi `Yes/No` untuk mencegah ketidaksengajaan klik.
+  - Seluruh tombol penting (Logout, Simpan Transaksi, Ambil Tugas, Selesai Tugas, Simpan Catatan, Pembatalan Pesanan, Ubah Status Karyawan) dilengkapi dialog konfirmasi `Yes/No` untuk mencegah ketidaksengajaan klik.
 - **Format Teks Bersih (Zero Underscore UI)**:
-  - Seluruh status sistem dari database ditampilkan ke antarmuka dengan frasa bahasa Indonesia yang rapi (contoh: *Sedang Dicuci*, *Sedang Disetrika*, *Tidak Perlu*, *Belum Bayar*, *Lunas*).
+  - Seluruh status sistem dari database ditampilkan ke antarmuka dengan frasa bahasa Indonesia yang rapi (contoh: *Sedang Dicuci*, *Sedang Disetrika*, *Tidak Perlu*, *Belum Bayar*, *Lunas*, *Dibatalkan*, *Dikembalikan*).
 
 ---
 
